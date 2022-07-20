@@ -8,16 +8,11 @@ import (
 	"image"
 	"image/jpeg"
 	"mosaic/algorithms"
+	"mosaic/model/tiles"
 	"net/http"
 	"strconv"
 	"time"
 )
-
-var TilesMap map[string][3]float64
-
-func init() {
-	TilesMap = algorithms.CreateTilesMap()
-}
 
 func Index(c *gin.Context) {
 	c.HTML(http.StatusOK, "upload.html", nil)
@@ -37,13 +32,13 @@ func Mosaic(c *gin.Context) {
 	original, _, _ := image.Decode(file)
 	bounds := original.Bounds()
 
-	cloneTails := algorithms.CloneTilesDB(TilesMap)
+	cloneTailsMap := algorithms.CloneTilesDB(tiles.OriginTilesMap)
 
 	// fan-out
-	c1 := algorithms.Cut(original, &cloneTails, tileSize, bounds.Min.X, bounds.Min.Y, bounds.Max.X/2, bounds.Max.Y/2)
-	c2 := algorithms.Cut(original, &cloneTails, tileSize, bounds.Max.X/2, bounds.Min.Y, bounds.Max.X, bounds.Max.Y/2)
-	c3 := algorithms.Cut(original, &cloneTails, tileSize, bounds.Min.X, bounds.Max.Y/2, bounds.Max.X/2, bounds.Max.Y)
-	c4 := algorithms.Cut(original, &cloneTails, tileSize, bounds.Max.X/2, bounds.Max.Y/2, bounds.Max.X, bounds.Max.Y)
+	c1 := algorithms.Cut(original, &cloneTailsMap, tileSize, bounds.Min.X, bounds.Min.Y, bounds.Max.X/2, bounds.Max.Y/2)
+	c2 := algorithms.Cut(original, &cloneTailsMap, tileSize, bounds.Max.X/2, bounds.Min.Y, bounds.Max.X, bounds.Max.Y/2)
+	c3 := algorithms.Cut(original, &cloneTailsMap, tileSize, bounds.Min.X, bounds.Max.Y/2, bounds.Max.X/2, bounds.Max.Y)
+	c4 := algorithms.Cut(original, &cloneTailsMap, tileSize, bounds.Max.X/2, bounds.Max.Y/2, bounds.Max.X, bounds.Max.Y)
 
 	// fan-in
 	full := algorithms.Combine(bounds, c1, c2, c3, c4)
